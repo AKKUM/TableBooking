@@ -8,7 +8,7 @@ from ..models import User
 from ..schemas import Token, UserCreate, User as UserSchema
 from ..config import settings
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(tags=["authentication"])
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(

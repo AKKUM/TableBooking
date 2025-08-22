@@ -9,7 +9,7 @@ from ..schemas import TableListResponse, BookingCreate, BookingResponse, Booking
 from ..services.booking_service import BookingService
 from ..models import TimeSlot as TimeSlotModel
 
-router = APIRouter(prefix="/bookings", tags=["bookings"])
+router = APIRouter(tags=["bookings"])
 booking_service = BookingService()
 
 @router.get("/tables", response_model=TableListResponse)

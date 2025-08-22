@@ -16,7 +16,7 @@ from ..schemas import (
 )
 from ..services.admin_service import AdminService
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+router = APIRouter(tags=["admin"])
 admin_service = AdminService()
 
 # Restaurant Settings
