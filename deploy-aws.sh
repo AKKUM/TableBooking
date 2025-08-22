@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 # Configuration
 APP_NAME="table-booking"
 ENVIRONMENT_NAME="table-booking-prod"
-REGION="us-east-1"
+REGION="eu-north-1"
 ECR_REPOSITORY="table-booking"
 
 # Check if AWS CLI is installed
