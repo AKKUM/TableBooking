@@ -85,6 +85,23 @@ EOL
   echo "✅ Created EB CLI config file at apps/backend/.elasticbeanstalk/config.yml"
 fi
 
+# Generate Dockerrun.aws.json pointing to ECR backend image
+cat > Dockerrun.aws.json <<EOL
+{
+  "AWSEBDockerrunVersion": 1,
+  "Image": {
+    "Name": "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_BACKEND:latest",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": 8000
+    }
+  ]
+}
+EOL
+echo "✅ Generated Dockerrun.aws.json for backend"
+
 # Check if environment exists
 if ! eb status $ENVIRONMENT_NAME --region $REGION >/dev/null 2>&1; then
   echo "➡️ Environment not found. Creating new environment: $ENVIRONMENT_NAME"
