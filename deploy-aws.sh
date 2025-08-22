@@ -63,22 +63,46 @@ cd ../..
 
 echo -e "${GREEN}✅ Docker images pushed to ECR${NC}"
 
-# --- Step 2: Backend (EB) ---
+# --- Step 2: Backend (Elastic Beanstalk) ---
 echo -e "${YELLOW}🔧 Deploying backend to Elastic Beanstalk...${NC}"
 
+cd apps/backend
+
+# Ensure EB CLI config exists (auto-generate if missing)
 if [ ! -f ".elasticbeanstalk/config.yml" ]; then
-  echo "Initializing Elastic Beanstalk application (non-interactive)..."
-  eb init $APP_NAME --platform docker --region $REGION --interactive 0
+  echo "⚙️  EB CLI config not found. Generating..."
+  mkdir -p .elasticbeanstalk
+  cat > .elasticbeanstalk/config.yml <<EOL
+branch-defaults:
+  default:
+    environment: $ENVIRONMENT_NAME
+global:
+  application_name: $APP_NAME
+  default_region: $REGION
+  platform: Docker
+  profile: default
+EOL
+  echo "✅ Created EB CLI config file at apps/backend/.elasticbeanstalk/config.yml"
 fi
 
-if ! eb status $ENVIRONMENT_NAME 2>/dev/null; then
-  eb create $ENVIRONMENT_NAME --platform docker --region $REGION \
-    --instance_type t3.micro --single --cname $APP_NAME
+# Check if environment exists
+if ! eb status $ENVIRONMENT_NAME --region $REGION >/dev/null 2>&1; then
+  echo "➡️ Environment not found. Creating new environment: $ENVIRONMENT_NAME"
+  eb create $ENVIRONMENT_NAME \
+    --platform "Docker" \
+    --region $REGION \
+    --instance_type t3.micro \
+    --single
 else
-  eb deploy $ENVIRONMENT_NAME
+  echo "➡️ Environment exists. Deploying update..."
+  eb deploy $ENVIRONMENT_NAME --region $REGION
 fi
 
+# Fetch backend URL
 BACKEND_URL=$(eb status $ENVIRONMENT_NAME --region $REGION | awk '/CNAME/ {print $2}')
+
+cd ../..
+
 echo -e "${GREEN}✅ Backend deployed: http://$BACKEND_URL${NC}"
 
 # --- Step 3: Frontend (S3 + CloudFront) ---
