@@ -1,9 +1,9 @@
 #!/bin/bash
 # AWS Deployment Script for TableBooking Application
-# Backend: FastAPI (Python)
+# Backend: FastAPI (Python, Dockerized)
 # Frontend: React (TypeScript)
 # Database: PostgreSQL (RDS)
-# Infrastructure: Elastic Beanstalk, ECR, S3, CloudFront
+# Infra: Elastic Beanstalk, ECR, S3, CloudFront
 
 set -euo pipefail
 
@@ -32,29 +32,10 @@ docker info >/dev/null || { echo -e "${RED}❌ Docker not running.${NC}"; exit 1
 
 echo -e "${GREEN}✅ Prerequisites check passed${NC}"
 
-# --- IAM Permission Checks ---
-echo -e "${YELLOW}🔍 Checking IAM permissions...${NC}"
-
-function check_permission() {
-  local action=$1
-  if ! aws iam simulate-principal-policy \
-    --policy-source-arn arn:aws:iam::$ACCOUNT_ID:user/$(aws iam get-user --query 'User.UserName' --output text 2>/dev/null || echo unknown) \
-    --action-names $action --region $REGION \
-    --query 'EvaluationResults[0].EvalDecision' --output text 2>/dev/null | grep -q "allowed"; then
-    echo -e "${RED}⚠️ Missing permission: $action${NC}"
-  else
-    echo -e "${GREEN}✔ Permission ok: $action${NC}"
-  fi
-}
-
-for perm in ecr:GetAuthorizationToken ecr:CreateRepository ecr:PutImage rds:CreateDBInstance elasticbeanstalk:CreateEnvironment s3:PutObject cloudfront:CreateDistribution; do
-  check_permission $perm
-done
-
 # --- Step 1: ECR build & push ---
 echo -e "${YELLOW}📦 Building & pushing Docker images...${NC}"
 
-# Login
+# Login to ECR
 aws ecr get-login-password --region $REGION | \
 docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
 
@@ -86,11 +67,13 @@ echo -e "${GREEN}✅ Docker images pushed to ECR${NC}"
 echo -e "${YELLOW}🔧 Deploying backend to Elastic Beanstalk...${NC}"
 
 if [ ! -f ".elasticbeanstalk/config.yml" ]; then
-  eb init $APP_NAME --platform python-3.11 --region $REGION
+  echo "Initializing Elastic Beanstalk application (non-interactive)..."
+  eb init $APP_NAME --platform docker --region $REGION --interactive 0
 fi
 
 if ! eb status $ENVIRONMENT_NAME 2>/dev/null; then
-  eb create $ENVIRONMENT_NAME --instance-type t3.micro --single
+  eb create $ENVIRONMENT_NAME --platform docker --region $REGION \
+    --instance_type t3.micro --single --cname $APP_NAME
 else
   eb deploy $ENVIRONMENT_NAME
 fi
@@ -146,4 +129,4 @@ echo "🔧 Next steps:"
 echo "   1. Point frontend API calls to backend URL"
 echo "   2. Set env vars in EB (DB creds, API keys)"
 echo "   3. Add custom domains (Route53) + SSL (ACM)"
-echo "   4. Wait for RDS to be ready before first migrations"
+echo "   4. Wait for RDS to be ready before migrations"
