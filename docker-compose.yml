@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./apps/backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://table_user:table_password@db:5432/table_booking
+      - SECRET_KEY=your-secret-key-here
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+    depends_on:
+      - db
+    volumes:
+      - ./apps/backend:/app
+    restart: unless-stopped
+
+  frontend:
+    build: ./apps/frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=table_booking
+      - POSTGRES_USER=table_user
+      - POSTGRES_PASSWORD=table_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

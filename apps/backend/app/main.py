@@ -1,59 +1,44 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from contextlib import asynccontextmanager
-from .database import engine, Base, refresh_metadata
-from .api import auth, bookings, admin
-from .config import settings
+from fastapi.security import HTTPBearer
+from sqlalchemy.orm import Session
+from datetime import datetime
+import uvicorn
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    refresh_metadata()  # Force metadata refresh for new table structure
-    # Skip table creation since tables already exist with new structure
-    # Base.metadata.create_all(bind=engine)
-    yield
-    # Shutdown
-    engine.dispose()
+from app.database import get_db
+from app.api import auth, admin, bookings
+from app.models import User
+from app.auth import get_current_active_user
 
 app = FastAPI(
-    title=settings.APP_NAME,
-    description="Comprehensive Table Reservation Booking System",
-    version="1.0.0",
-    lifespan=lifespan
+    title="Table Booking API",
+    description="API for restaurant table booking system",
+    version="1.0.0"
 )
 
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=["*"],  # Configure this properly for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(auth.router, prefix="/api/v1")
-app.include_router(bookings.router, prefix="/api/v1")
-app.include_router(admin.router, prefix="/api/v1")
-
-@app.get("/")
-async def root():
-    """Root endpoint with system information."""
-    return {
-        "message": "Table Reservation Booking System API",
-        "version": "1.0.0",
-        "restaurant": settings.RESTAURANT_NAME,
-        "address": settings.RESTAURANT_ADDRESS,
-        "docs": "/docs",
-        "redoc": "/redoc"
-    }
-
+# Health check endpoint for AWS
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy", "service": "table-booking-api"}
+    return {"status": "healthy", "timestamp": datetime.utcnow()}
+
+# Include routers
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
+app.include_router(bookings.router, prefix="/api/v1/bookings", tags=["bookings"])
+
+# Root endpoint
+@app.get("/")
+async def root():
+    return {"message": "Table Booking API", "version": "1.0.0"}
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
