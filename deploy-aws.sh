@@ -83,7 +83,7 @@ cat > Dockerrun.aws.json <<EOL
 EOL
 echo "✅ Generated Dockerrun.aws.json for backend"
 
-cd apps/backend
+
 
 # Ensure EB CLI config exists (auto-generate if missing)
 if [ ! -f ".elasticbeanstalk/config.yml" ]; then
@@ -102,8 +102,9 @@ EOL
   echo "✅ Created EB CLI config file at apps/backend/.elasticbeanstalk/config.yml"
 fi
 
+#cd apps/backend
 
-  cd ../..
+
 # Check if environment exists
 if ! eb status $ENVIRONMENT_NAME --region $REGION >/dev/null 2>&1; then
   echo "➡️ Environment not found. Creating new environment: $ENVIRONMENT_NAME"
@@ -117,6 +118,8 @@ else
 
   eb deploy $ENVIRONMENT_NAME --region $REGION
 fi
+  
+#cd ../..
 
 # Fetch backend URL
 BACKEND_URL=$(eb status $ENVIRONMENT_NAME --region $REGION | awk '/CNAME/ {print $2}')
