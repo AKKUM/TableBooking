@@ -86,7 +86,7 @@ EOL
 fi
 
 # Generate Dockerrun.aws.json pointing to ECR backend image
-cat > Dockerrun.aws.json <<EOL
+cat > /apps/backend/Dockerrun.aws.json <<EOL
 {
   "AWSEBDockerrunVersion": 1,
   "Image": {
