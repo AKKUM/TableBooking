@@ -1,72 +1,57 @@
 #!/bin/bash
-# AWS Deployment Script for TableBooking Application
-# Backend: FastAPI (Python, Dockerized)
-# Frontend: React (TypeScript)
-# Database: PostgreSQL (RDS)
-# Infra: Elastic Beanstalk, ECR, S3, CloudFront
+set -e
 
-set -euo pipefail
-
-echo "🚀 Starting AWS deployment for TableBooking..."
-
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-# Config
+# -----------------------------
+# CONFIGURATION
+# -----------------------------
 APP_NAME="table-booking"
-ENVIRONMENT_NAME="table-booking-prod"
+ECR_BACKEND="table-booking-backend"
 REGION="eu-north-1"
+ENVIRONMENT_NAME="table-booking-prod"
+
+# -----------------------------
+# COLORS
+# -----------------------------
+GREEN="\033[0;32m"
+YELLOW="\033[1;33m"
+RED="\033[0;31m"
+NC="\033[0m"
+
+# -----------------------------
+# AWS ACCOUNT ID
+# -----------------------------
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-ECR_BACKEND="$APP_NAME-backend"
-ECR_FRONTEND="$APP_NAME-frontend"
+echo -e "${GREEN}✅ AWS Account ID: $ACCOUNT_ID${NC}"
 
-# --- Prerequisites ---
-echo -e "${YELLOW}🔍 Checking prerequisites...${NC}"
+# -----------------------------
+# STEP 1: Push Docker Image to ECR
+# -----------------------------
+echo -e "${YELLOW}🐳 Building and pushing Docker image to ECR...${NC}"
 
-command -v aws >/dev/null || { echo -e "${RED}❌ AWS CLI not found.${NC}"; exit 1; }
-command -v eb >/dev/null || { echo -e "${RED}❌ EB CLI not found. Install with: pip install awsebcli${NC}"; exit 1; }
-docker info >/dev/null || { echo -e "${RED}❌ Docker not running.${NC}"; exit 1; }
+# Authenticate Docker to ECR
+aws ecr get-login-password --region $REGION \
+  | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
 
-echo -e "${GREEN}✅ Prerequisites check passed${NC}"
+# Ensure ECR repo exists
+aws ecr describe-repositories --repository-names $ECR_BACKEND --region $REGION >/dev/null 2>&1 \
+  || aws ecr create-repository --repository-name $ECR_BACKEND --region $REGION
 
-# --- Step 1: ECR build & push ---
-echo -e "${YELLOW}📦 Building & pushing Docker images...${NC}"
+# Build backend image
+docker build -t $ECR_BACKEND ./apps/backend
 
-# Login to ECR
-aws ecr get-login-password --region $REGION | \
-docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
-
-# Ensure repos exist
-for repo in $ECR_BACKEND $ECR_FRONTEND; do
-  aws ecr describe-repositories --repository-names $repo --region $REGION 2>/dev/null || \
-  aws ecr create-repository --repository-name $repo --region $REGION
-done
-
-# Build backend
-echo "➡️ Building backend..."
-cd apps/backend
-docker build -t $ECR_BACKEND .
+# Tag image for ECR
 docker tag $ECR_BACKEND:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_BACKEND:latest
+
+# Push to ECR
 docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_BACKEND:latest
-cd ../..
-
-# Build frontend
-echo "➡️ Building frontend..."
-cd apps/frontend
-docker build -t $ECR_FRONTEND .
-docker tag $ECR_FRONTEND:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_FRONTEND:latest
-docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_FRONTEND:latest
-cd ../..
-
 echo -e "${GREEN}✅ Docker images pushed to ECR${NC}"
 
-# --- Step 2: Backend (Elastic Beanstalk) ---
+# -----------------------------
+# STEP 2: Elastic Beanstalk Deploy
+# -----------------------------
 echo -e "${YELLOW}🔧 Deploying backend to Elastic Beanstalk...${NC}"
 
-# Generate Dockerrun.aws.json pointing to ECR backend image
+# Generate Dockerrun.aws.json at project root
 cat > Dockerrun.aws.json <<EOL
 {
   "AWSEBDockerrunVersion": 1,
@@ -81,22 +66,20 @@ cat > Dockerrun.aws.json <<EOL
   ]
 }
 EOL
-echo "✅ Generated Dockerrun.aws.json at project root"
+echo -e "${GREEN}✅ Generated Dockerrun.aws.json at project root${NC}"
 
-
-# Initialize EB CLI workspace if not already done
+# Initialize EB CLI if not already done
 if [ ! -d ".elasticbeanstalk" ]; then
   echo "⚙️ Running eb init..."
   eb init $APP_NAME \
     --platform "Docker" \
     --region $REGION \
     --profile default \
-    --quiet \
     --create-application
-  echo "✅ EB CLI initialized"
+  echo -e "${GREEN}✅ EB CLI initialized${NC}"
 fi
 
-# Create environment if missing, else deploy
+# Create environment if missing, else deploy update
 if ! eb status $ENVIRONMENT_NAME --region $REGION >/dev/null 2>&1; then
   echo "➡️ Environment not found. Creating new environment: $ENVIRONMENT_NAME"
   eb create $ENVIRONMENT_NAME \
@@ -108,62 +91,27 @@ else
   echo "➡️ Environment exists. Deploying update..."
   eb deploy $ENVIRONMENT_NAME --region $REGION
 fi
-  
-#cd ../..
 
-# Fetch backend URL
+# Fetch deployed backend URL
 BACKEND_URL=$(eb status $ENVIRONMENT_NAME --region $REGION | awk '/CNAME/ {print $2}')
-
-
-
 echo -e "${GREEN}✅ Backend deployed: http://$BACKEND_URL${NC}"
 
-# --- Step 3: Frontend (S3 + CloudFront) ---
-echo -e "${YELLOW}🌐 Deploying frontend...${NC}"
+# -----------------------------
+# STEP 3: Frontend (React + TypeScript)
+# -----------------------------
+echo -e "${YELLOW}🌐 Building and deploying frontend...${NC}"
 
 cd apps/frontend
-npm ci && npm run build
-BUCKET_NAME="$APP_NAME-frontend-$ACCOUNT_ID"
 
-aws s3 mb s3://$BUCKET_NAME --region $REGION 2>/dev/null || true
-aws s3 website s3://$BUCKET_NAME --index-document index.html --error-document index.html
-aws s3 sync build/ s3://$BUCKET_NAME --delete
-cd ../..
+# Install dependencies and build React app
+npm install
+npm run build
 
-FRONTEND_URL="http://$BUCKET_NAME.s3-website-$REGION.amazonaws.com"
+# Sync build to S3 (bucket must exist)
+aws s3 sync build/ s3://$APP_NAME-frontend --delete --region $REGION
+
+# Set S3 bucket to host static site
+aws s3 website s3://$APP_NAME-frontend/ --index-document index.html --error-document index.html
+
+FRONTEND_URL="http://$APP_NAME-frontend.s3-website.$REGION.amazonaws.com"
 echo -e "${GREEN}✅ Frontend deployed: $FRONTEND_URL${NC}"
-
-# --- Step 4: RDS ---
-echo -e "${YELLOW}🗄️ Setting up RDS PostgreSQL...${NC}"
-
-DB_INSTANCE_IDENTIFIER="$APP_NAME-db"
-if ! aws rds describe-db-instances --db-instance-identifier $DB_INSTANCE_IDENTIFIER --region $REGION &>/dev/null; then
-  aws rds create-db-instance \
-    --db-instance-identifier $DB_INSTANCE_IDENTIFIER \
-    --db-instance-class db.t3.micro \
-    --engine postgres \
-    --master-username table_user \
-    --master-user-password table_password \
-    --allocated-storage 20 \
-    --storage-type gp2 \
-    --region $REGION
-  echo -e "${YELLOW}⏳ RDS creation in progress... may take 5-10 mins${NC}"
-else
-  echo "✔ RDS instance already exists"
-fi
-
-echo -e "${GREEN}✅ RDS configured${NC}"
-
-# --- Summary ---
-echo -e "${GREEN}🎉 Deployment complete${NC}"
-echo ""
-echo "📋 Summary:"
-echo "   Backend: http://$BACKEND_URL"
-echo "   Frontend: $FRONTEND_URL"
-echo "   Database: $DB_INSTANCE_IDENTIFIER"
-echo ""
-echo "🔧 Next steps:"
-echo "   1. Point frontend API calls to backend URL"
-echo "   2. Set env vars in EB (DB creds, API keys)"
-echo "   3. Add custom domains (Route53) + SSL (ACM)"
-echo "   4. Wait for RDS to be ready before migrations"
