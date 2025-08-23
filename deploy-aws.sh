@@ -66,6 +66,23 @@ echo -e "${GREEN}✅ Docker images pushed to ECR${NC}"
 # --- Step 2: Backend (Elastic Beanstalk) ---
 echo -e "${YELLOW}🔧 Deploying backend to Elastic Beanstalk...${NC}"
 
+# Generate Dockerrun.aws.json pointing to ECR backend image
+cat > Dockerrun.aws.json <<EOL
+{
+  "AWSEBDockerrunVersion": 1,
+  "Image": {
+    "Name": "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_BACKEND:latest",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": 8000
+    }
+  ]
+}
+EOL
+echo "✅ Generated Dockerrun.aws.json for backend"
+
 cd apps/backend
 
 # Ensure EB CLI config exists (auto-generate if missing)
@@ -85,23 +102,8 @@ EOL
   echo "✅ Created EB CLI config file at apps/backend/.elasticbeanstalk/config.yml"
 fi
 
-# Generate Dockerrun.aws.json pointing to ECR backend image
-cat > /apps/backend/Dockerrun.aws.json <<EOL
-{
-  "AWSEBDockerrunVersion": 1,
-  "Image": {
-    "Name": "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_BACKEND:latest",
-    "Update": "true"
-  },
-  "Ports": [
-    {
-      "ContainerPort": 8000
-    }
-  ]
-}
-EOL
-echo "✅ Generated Dockerrun.aws.json for backend"
 
+  cd ../..
 # Check if environment exists
 if ! eb status $ENVIRONMENT_NAME --region $REGION >/dev/null 2>&1; then
   echo "➡️ Environment not found. Creating new environment: $ENVIRONMENT_NAME"
@@ -112,13 +114,14 @@ if ! eb status $ENVIRONMENT_NAME --region $REGION >/dev/null 2>&1; then
     --single
 else
   echo "➡️ Environment exists. Deploying update..."
+
   eb deploy $ENVIRONMENT_NAME --region $REGION
 fi
 
 # Fetch backend URL
 BACKEND_URL=$(eb status $ENVIRONMENT_NAME --region $REGION | awk '/CNAME/ {print $2}')
 
-cd ../..
+
 
 echo -e "${GREEN}✅ Backend deployed: http://$BACKEND_URL${NC}"
 
