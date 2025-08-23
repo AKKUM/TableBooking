@@ -91,7 +91,8 @@ if [ ! -d ".elasticbeanstalk" ]; then
     --platform "Docker" \
     --region $REGION \
     --profile default \
-    --quiet
+    --quiet \
+    --create-application
   echo "✅ EB CLI initialized"
 fi
 
