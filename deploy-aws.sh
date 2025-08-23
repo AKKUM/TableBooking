@@ -81,31 +81,21 @@ cat > Dockerrun.aws.json <<EOL
   ]
 }
 EOL
-echo "✅ Generated Dockerrun.aws.json for backend"
+echo "✅ Generated Dockerrun.aws.json at project root"
 
 
-
-# Ensure EB CLI config exists (auto-generate if missing)
-if [ ! -f ".elasticbeanstalk/config.yml" ]; then
-  echo "⚙️  EB CLI config not found. Generating..."
-  mkdir -p .elasticbeanstalk
-  cat > .elasticbeanstalk/config.yml <<EOL
-branch-defaults:
-  default:
-    environment: $ENVIRONMENT_NAME
-global:
-  application_name: $APP_NAME
-  default_region: $REGION
-  platform: Docker
-  profile: default
-EOL
-  echo "✅ Created EB CLI config file at apps/backend/.elasticbeanstalk/config.yml"
+# Initialize EB CLI workspace if not already done
+if [ ! -d ".elasticbeanstalk" ]; then
+  echo "⚙️ Running eb init..."
+  eb init $APP_NAME \
+    --platform "Docker" \
+    --region $REGION \
+    --profile default \
+    --quiet
+  echo "✅ EB CLI initialized"
 fi
 
-#cd apps/backend
-
-
-# Check if environment exists
+# Create environment if missing, else deploy
 if ! eb status $ENVIRONMENT_NAME --region $REGION >/dev/null 2>&1; then
   echo "➡️ Environment not found. Creating new environment: $ENVIRONMENT_NAME"
   eb create $ENVIRONMENT_NAME \
@@ -115,7 +105,6 @@ if ! eb status $ENVIRONMENT_NAME --region $REGION >/dev/null 2>&1; then
     --single
 else
   echo "➡️ Environment exists. Deploying update..."
-
   eb deploy $ENVIRONMENT_NAME --region $REGION
 fi
   
