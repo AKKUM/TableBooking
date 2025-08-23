@@ -10,3 +10,4 @@ passlib[bcrypt]
 python-multipart
 redis
 python-dotenv
+psycopg2-binary
