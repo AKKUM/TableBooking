@@ -185,25 +185,19 @@ class AdminService:
         return db.query(Table).filter(Table.is_active == True).order_by(Table.table_number).all()
     
     def delete_yesterday_bookings(self, db: Session) -> int:
-        """Delete all bookings from yesterday. Returns the number of deleted bookings."""
-        from datetime import date, timedelta
-        
+        """Delete all bookings from yesterday and earlier.
+        Returns the number of deleted bookings. Safe when there are no rows.
+        """
+        # booking_date is a DateTime; delete everything with booking_date <= end of yesterday
         yesterday = date.today() - timedelta(days=1)
-        
-        # Find all bookings from yesterday
-        yesterday_bookings = db.query(Booking).filter(
-            Booking.booking_date <= yesterday
-        ).all()
-        
-        # Count before deletion
-        count = len(yesterday_bookings)
-        
-        # Delete the bookings
-        for booking in yesterday_bookings:
-            db.delete(booking)
-        
+        cutoff = datetime.combine(yesterday, datetime.max.time())
+        query = db.query(Booking).filter(Booking.booking_date <= cutoff)
+        deleted_count = query.count()
+        # Use bulk delete; safe even if zero rows
+        query.delete(synchronize_session=False)
         db.commit()
-        return count
+        return deleted_count
+        
     # Room Layout Management
     def create_room_layout(self, db: Session, layout_data: RoomLayoutCreate, user_id: int) -> RoomLayout:
         """Create a new room layout."""

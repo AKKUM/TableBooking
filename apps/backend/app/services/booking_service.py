@@ -182,6 +182,20 @@ class BookingService:
         """Get a specific booking by ID."""
         return db.query(Booking).filter(Booking.id == booking_id).first()
     
+    def delete_yesterday_bookings(self, db: Session) -> int:
+        """Delete all bookings from yesterday and earlier.
+        Returns the number of deleted bookings. Safe when there are no rows.
+        """
+        # booking_date is a DateTime; delete everything with booking_date <= end of yesterday
+        yesterday = date.today() - timedelta(days=1)
+        cutoff = datetime.combine(yesterday, datetime.max.time())
+        query = db.query(Booking).filter(Booking.booking_date <= cutoff)
+        deleted_count = query.count()
+        # Use bulk delete; safe even if zero rows
+        query.delete(synchronize_session=False)
+        db.commit()
+        return deleted_count
+    
     
     def _is_table_blocked(self, db: Session, table_number: str, target_date: date, start_time: str, end_time: str) -> bool:
         """Check if a table is blocked for the given date and time."""
