@@ -48,10 +48,10 @@ const Login: React.FC = () => {
       <div className="bg-gray-50 shadow-sm text-blue-600 py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-xl font-bold">
+            <h1 className="text-lg sm:text-xl font-bold">
               {settings ? settings.restaurant_name : 'Restaurant Name'}
             </h1>
-            <p className="text-blue-600 text-sm">
+            <p className="text-blue-600 text-xs sm:text-sm">
               {settings ? settings.address : '123 Main Street, City, State 12345'}
               {settings?.phone && ` • Phone: ${settings.phone}`}
             </p>
@@ -59,22 +59,22 @@ const Login: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+      <div className="flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-6 sm:space-y-8">
           {/* Header */}
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center">
-              <Calendar className="h-8 w-8 text-white" />
+            <div className="mx-auto h-10 w-10 sm:h-12 sm:w-12 bg-primary-600 rounded-full flex items-center justify-center">
+              <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
             </div>
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">Sign in to your account</h2>
+            <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-bold text-gray-900">Sign in to your account</h2>
             <p className="mt-2 text-sm text-gray-600">
               Access your table reservation system
             </p>
           </div>
 
           {/* Login Form */}
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            <div className="space-y-4">
+          <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <div className="space-y-3 sm:space-y-4">
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700">
                   Username
@@ -83,11 +83,11 @@ const Login: React.FC = () => {
                   id="username"
                   type="text"
                   {...register('username', { required: 'Username is required' })}
-                  className="input mt-1"
+                  className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="Enter your username"
                 />
                 {errors.username && (
-                  <p className="mt-1 text-sm text-danger-600">{errors.username.message}</p>
+                  <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
                 )}
               </div>
 
@@ -100,7 +100,7 @@ const Login: React.FC = () => {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     {...register('password', { required: 'Password is required' })}
-                    className="input pr-10"
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
                     placeholder="Enter your password"
                   />
                   <button
@@ -109,14 +109,14 @@ const Login: React.FC = () => {
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
+                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
                     ) : (
-                      <Eye className="h-5 w-5" />
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                     )}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="mt-1 text-sm text-danger-600">{errors.password.message}</p>
+                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
                 )}
               </div>
             </div>
@@ -125,7 +125,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn-primary w-full"
+              className="w-full px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <div className="flex items-center justify-center">
@@ -136,9 +136,7 @@ const Login: React.FC = () => {
                 'Sign in'
               )}
             </button>
-
           </form>
-
         </div>
       </div>
     </div>

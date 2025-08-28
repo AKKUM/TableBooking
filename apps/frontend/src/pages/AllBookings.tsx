@@ -133,23 +133,105 @@ const AllBookings: React.FC = () => {
   }, [bookings, search]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Page Title and Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-semibold text-gray-900">All Bookings</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">All Bookings</h1>
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin"
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 rounded-md hover:bg-gray-100 transition-colors"
+            >
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Dashboard
+            </Link>
+          )}
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
           <input
-            className="input"
+            className="w-full sm:w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
             placeholder="Search guest, phone, table, time..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <button className="btn-secondary" onClick={fetchBookings}>Refresh</button>
+          <button 
+            className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors text-sm"
+            onClick={fetchBookings}
+          >
+            Refresh
+          </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Mobile Cards View */}
+      <div className="block sm:hidden space-y-3">
+        {loading ? (
+          <div className="text-center py-8">
+            <Loader2 className="h-6 w-6 inline-block mr-2 animate-spin" /> Loading bookings...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">No bookings found</div>
+        ) : (
+          filtered.map((b) => {
+            if (!b || typeof b !== 'object') return null;
+            if (!b.id || !b.guest_name || !b.table_number || !b.booking_date || !b.start_time || !b.end_time) return null;
+            
+            const dateStr = new Date(b.booking_date).toLocaleDateString();
+            return (
+              <div key={b.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900 text-sm">{String(b.guest_name)}</h3>
+                    <p className="text-xs text-gray-500">{String(b.guest_phone || '')}</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    b.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
+                    {String(b.status)}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                  <div>
+                    <span className="font-medium">Date:</span> {dateStr}
+                  </div>
+                  <div>
+                    <span className="font-medium">Table:</span> {String(b.table_number)}
+                  </div>
+                  <div>
+                    <span className="font-medium">Time:</span> {String(b.start_time)} - {String(b.end_time)}
+                  </div>
+                  <div>
+                    <span className="font-medium">People:</span> {Number(b.number_of_people)}
+                  </div>
+                </div>
+                
+                {b.status === 'confirmed' && (
+                  <button
+                    className="w-full px-3 py-2 border border-gray-300 text-gray-700 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors text-sm disabled:opacity-50"
+                    onClick={() => cancelBooking(b.id)}
+                    disabled={cancellingId === b.id}
+                  >
+                    {cancellingId === b.id ? (
+                      <>
+                        <Loader2 className="h-4 w-4 inline-block mr-2 animate-spin" /> Cancelling...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-4 w-4 inline-block mr-2" /> Cancel
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            );
+          }).filter(Boolean)
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden sm:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -176,17 +258,8 @@ const AllBookings: React.FC = () => {
                 </tr>
               ) : (
                 filtered.map((b) => {
-                  // Safety check: ensure all required fields exist and are of correct type
-                  if (!b || typeof b !== 'object') {
-                    console.warn('Invalid booking object:', b);
-                    return null;
-                  }
-                  
-                  // Ensure all required fields are present and of correct type
-                  if (!b.id || !b.guest_name || !b.table_number || !b.booking_date || !b.start_time || !b.end_time) {
-                    console.warn('Missing required fields in booking:', b);
-                    return null;
-                  }
+                  if (!b || typeof b !== 'object') return null;
+                  if (!b.id || !b.guest_name || !b.table_number || !b.booking_date || !b.start_time || !b.end_time) return null;
                   
                   const dateStr = new Date(b.booking_date).toLocaleDateString();
                   return (
@@ -202,7 +275,7 @@ const AllBookings: React.FC = () => {
                       <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                         {b.status === 'confirmed' && (
                           <button
-                            className="btn-secondary inline-flex items-center"
+                            className="px-3 py-1 border border-gray-300 text-gray-700 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors text-sm inline-flex items-center"
                             onClick={() => cancelBooking(b.id)}
                             disabled={cancellingId === b.id}
                           >
@@ -220,7 +293,7 @@ const AllBookings: React.FC = () => {
                       </td>
                     </tr>
                   );
-                }).filter(Boolean) // Remove any null entries
+                }).filter(Boolean)
               )}
             </tbody>
           </table>

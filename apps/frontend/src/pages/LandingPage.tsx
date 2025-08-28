@@ -354,30 +354,30 @@ const LandingPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Page Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Table Availability</h1>
-          <p className="text-lg text-gray-600">Check table availability and manage reservations</p>
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Table Availability</h1>
+          <p className="text-base sm:text-lg text-gray-600">Check table availability and manage reservations</p>
         </div>
 
         {/* Date and Time Selection */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-5 w-5 text-gray-400" />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="flex flex-col gap-4 items-center justify-center">
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <Calendar className="h-5 w-5 text-gray-400 flex-shrink-0" />
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full sm:w-auto border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
               />
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
               <select
                 value={selectedTimeSlot}
                 onChange={(e) => setSelectedTimeSlot(e.target.value)}
-                className="border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full sm:w-auto border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
               >
                 {availableTimeSlots.map((slot) => (
                   <option key={slot} value={slot}>
@@ -389,7 +389,7 @@ const LandingPage: React.FC = () => {
           </div>
           
           {selectedDate && selectedTimeSlot && (
-            <div className="text-center mt-4 text-gray-600">
+            <div className="text-center mt-4 text-gray-600 text-sm sm:text-base">
               Showing availability for {formatDate(selectedDate)} at {selectedTimeSlot}
             </div>
           )}
@@ -397,13 +397,13 @@ const LandingPage: React.FC = () => {
 
         {/* Table Availability */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading table availability...</p>
+          <div className="text-center py-8 sm:py-12">
+            <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600 text-sm sm:text-base">Loading table availability...</p>
           </div>
         ) : !Array.isArray(tableAvailability) || tableAvailability.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600">
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-gray-600 text-sm sm:text-base">
               {!Array.isArray(tableAvailability) 
                 ? 'Error loading table data. Please try again.' 
                 : 'No tables available for the selected date and time.'
@@ -411,11 +411,11 @@ const LandingPage: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:grid-cols-4 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
             {tableAvailability.map((tableAvailability) => (
               <div
                 key={tableAvailability.table_number}
-                className={`bg-white rounded-lg shadow-sm border-2 p-6 transition-all duration-200 hover:shadow-md cursor-pointer ${
+                className={`bg-white rounded-lg shadow-sm border-2 p-4 sm:p-6 transition-all duration-200 hover:shadow-md cursor-pointer ${
                   tableAvailability.is_available
                     ? 'border-green-200 hover:border-green-700'
                     : 'border-red-200 hover:border-red-700'
@@ -428,12 +428,12 @@ const LandingPage: React.FC = () => {
                   }
                 }}
               >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">
+                <div className="flex justify-between items-start mb-3 sm:mb-4">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
                     Table {tableAvailability.table_number}
                   </h3>
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    className={`inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-xs font-medium ${
                       tableAvailability.is_available
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
@@ -443,24 +443,24 @@ const LandingPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <User className="h-4 w-4" />
+                <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+                  <div className="flex items-center space-x-2 text-gray-600 text-sm sm:text-base">
+                    <User className="h-4 w-4 flex-shrink-0" />
                     <span>{tableAvailability.seats} seats</span>
                   </div>
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <MapPin className="h-4 w-4" />
+                  <div className="flex items-center space-x-2 text-gray-600 text-sm sm:text-base">
+                    <MapPin className="h-4 w-4 flex-shrink-0" />
                     <span className="capitalize">{tableAvailability.table_type}</span>
                   </div>
                 </div>
 
                 {tableAvailability.is_available ? (
-                  <button className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors">
+                  <button className="w-full bg-green-600 text-white py-2 px-3 sm:px-4 rounded-md hover:bg-green-700 transition-colors text-sm sm:text-base">
                     Book This Table
                   </button>
                 ) : (
                   <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-2">Click to view details</p>
+                    <p className="text-xs sm:text-sm text-gray-500 mb-2">Click to view details</p>
                     <div className="text-xs text-gray-400">
                       {tableAvailability.booked_slots.length > 0 && (
                         <p>Booked by: {tableAvailability.booked_slots[0].guest_name}</p>

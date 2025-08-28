@@ -87,55 +87,60 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Page Title */}
+      <div className="text-center sm:text-left mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+        <p className="text-sm sm:text-base text-gray-600">Manage your restaurant operations</p>
+      </div>
 
       {/* Statistics Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-blue-600" />
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.total_bookings}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Bookings</p>
+                <p className="text-xl sm:text-2xl font-semibold text-gray-900">{stats.total_bookings}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-green-600" />
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Today's Bookings</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.today_bookings}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Today's Bookings</p>
+                <p className="text-xl sm:text-2xl font-semibold text-gray-900">{stats.today_bookings}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-purple-600" />
+                <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Confirmed</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.confirmed_bookings}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Confirmed</p>
+                <p className="text-xl sm:text-2xl font-semibold text-gray-900">{stats.confirmed_bookings}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-orange-100 rounded-lg">
-                <Layout className="h-6 w-6 text-orange-600" />
+                <Layout className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Tables</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.total_tables}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Tables</p>
+                <p className="text-xl sm:text-2xl font-semibold text-gray-900">{stats.total_tables}</p>
               </div>
             </div>
           </div>
@@ -143,31 +148,30 @@ const AdminDashboard: React.FC = () => {
       )}
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {adminCards.map((card) => (
             <Link
               key={card.title}
               to={card.href}
-              className="group block p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200"
+              className="group block p-3 sm:p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200"
             >
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${card.color} bg-opacity-10`}>
-                  <card.icon className={`h-5 w-5 ${card.textColor}`} />
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className={`p-2 rounded-lg ${card.color} bg-opacity-10 flex-shrink-0`}>
+                  <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${card.textColor}`} />
                 </div>
-                <div>
-                  <h3 className="font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-medium text-gray-900 group-hover:text-primary-600 transition-colors text-sm sm:text-base">
                     {card.title}
                   </h3>
-                  <p className="text-sm text-gray-500">{card.description}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">{card.description}</p>
                 </div>
               </div>
             </Link>
           ))}
         </div>
       </div>
-
     </div>
   );
 };
